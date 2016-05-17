@@ -45,14 +45,14 @@ class IMDb(callbacks.Plugin):
         self.__parent = super(IMDb, self)
         self.__parent.__init__(irc)
         
-    def createRoot(self, imdb_url):
+    def createRoot(self, url):
         """opens the given url and creates the lxml.html root element"""
-        pagefd = utils.web.getUrlFd(imdb_url,headers=self.http_headers)
+        pagefd = utils.web.getUrlFd(url,headers=self.http_headers)
         root = html.parse(pagefd)
         return root
 
     def imdbSearch(self,searchString):
-        """searches the given stringh on imdb.com"""
+        """searches the given string on imdb.com"""
         searchEncoded = urlencode({'q' : searchString})
         url = 'https://www.imdb.com/find?&s=tt&' + searchEncoded
         root = self.createRoot(url)
