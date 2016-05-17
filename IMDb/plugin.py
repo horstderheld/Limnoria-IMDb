@@ -45,7 +45,7 @@ class IMDb(callbacks.Plugin):
         self.__parent = super(IMDb, self)
         self.__parent.__init__(irc)
         
-        def createRoot(self, imdb_url):
+    def createRoot(self, imdb_url):
         """opens the given url and creates the lxml.html root element"""
         pagefd = utils.web.getUrlFd(imdb_url,headers=self.http_headers)
         root = html.parse(pagefd)
@@ -103,7 +103,6 @@ class IMDb(callbacks.Plugin):
                     elem = elem.replace(s, '')
                 return elem
             return f
-
 
         # Dictionary of rules for page scraping. has each xpath and a function to convert that element into its final string.
         # Each value is a tuple of tuples so that you can provide multiple sets of xpaths/functions for each piece of info.
