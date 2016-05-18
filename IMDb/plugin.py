@@ -41,22 +41,35 @@ class IMDb(callbacks.Plugin):
         
     def createRoot(self, url):
         """opens the given url and creates the lxml.html root element"""
+        
+        #get headers from utils and create a referer
         ref = 'http://%s/%s' % (dynamic.irc.server, dynamic.irc.nick)
         headers = dict(utils.web.defaultHeaders)
         headers['Referer'] = ref
+        
+        #open url and create root
         pagefd = utils.web.getUrlFd(url,headers=headers)
         root = html.parse(pagefd)
+        
         return root
 
-    def imdbSearch(self,searchString):
+    def imdbSearch(self, searchString):
         """searches the given string on imdb.com"""
+        
+        #create url fro imd.com search
         searchEncoded = urlencode({'q' : searchString})
         url = 'https://www.imdb.com/find?&s=tt&' + searchEncoded
+        
         root = self.createRoot(url)
+        
+        #parse root element for movie url
         element = root.findall('//td[@class="result_text"]/a')
-        url = 'https://www.imdb.com' + element[0].attrib['href']
-        url = url[:url.find('?ref_')]
-        return url
+        result = 'https://www.imdb.com' + element[0].attrib['href']
+        
+        #remove query string from url
+        result = result[:result.find('?ref_')]
+        
+        return result
 
     def imdb(self, irc, msg, args, text):
         """<movie>
