@@ -79,8 +79,12 @@ class IMDb(callbacks.Plugin):
         query = 'site:http://www.imdb.com/title/ %s' % text
         imdb_url = None
         google_plugin = irc.getCallback('Google')
-        if google_plugin:
-            results = google_plugin.decode(google_plugin.search(query, msg.args[0]))
+        if searx_plugin:
+            results = searx_plugin.search(query, msg.args[0])
+            results = json.loads(results.read().decode('utf-8'))
+            results = results['results']
+
+            imdb_url = None
 
             # use first result that ends with a / so that we know its link to main movie page
             for r in results:
