@@ -34,12 +34,6 @@ class IMDb(callbacks.Plugin):
     """Add the help for "@plugin help IMDb" here
     This should describe *how* to use this plugin."""
     threaded = True
-    
-    http_headers = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "User-Agent": "Mozilla/5.0 (X11; Linux i686; rv:5.0) Gecko/20100101 Firefox/5.0"
-    }
 
     def __init__(self, irc):
         self.__parent = super(IMDb, self)
@@ -47,7 +41,10 @@ class IMDb(callbacks.Plugin):
         
     def createRoot(self, url):
         """opens the given url and creates the lxml.html root element"""
-        pagefd = utils.web.getUrlFd(url,headers=self.http_headers)
+        ref = 'http://%s/%s' % (dynamic.irc.server, dynamic.irc.nick)
+        headers = dict(utils.web.defaultHeaders)
+        headers['Referer'] = ref
+        pagefd = utils.web.getUrlFd(url,headers=headers)
         root = html.parse(pagefd)
         return root
 
