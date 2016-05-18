@@ -1,7 +1,7 @@
-Supybot-IMDb
+Limnoria-IMDb
 ============
 
-Supybot IRC bot plugin. Grabs info from actual imdb website.
+Limnoria IRC bot plugin. Grabs info from actual imdb website.
 
 
 Required:
