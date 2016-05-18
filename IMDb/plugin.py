@@ -13,20 +13,13 @@ import supybot.callbacks as callbacks
 
 import sys
 import json
-import socket
 import unicodedata
 from lxml import html
 
 if sys.version_info[0] >= 3:
-    from urllib.parse import urlencode
-    from urllib.request import urlopen, Request
-    from urllib.error import HTTPError, URLError
     def u(s):
         return s
 else:
-    import urllib2
-    from urllib import urlencode
-    from urllib2 import urlopen, Request, HTTPError, URLError
     def u(s):
         return unicode(s, "unicode_escape")
 
