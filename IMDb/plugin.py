@@ -71,7 +71,7 @@ class IMDb(callbacks.Plugin):
         # do a google search for movie on imdb and use first result
         query = 'site:http://www.imdb.com/title/ %s' % text
         imdb_url = None
-        google_plugin = irc.getCallback('Google')
+        searx_plugin = irc.getCallback('Searx')
         if searx_plugin:
             results = searx_plugin.search(query, msg.args[0])
             results = json.loads(results.read().decode('utf-8'))
