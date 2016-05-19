@@ -27,41 +27,34 @@ class IMDb(callbacks.Plugin):
     """Add the help for "@plugin help IMDb" here
     This should describe *how* to use this plugin."""
     threaded = True
-
+    
     def __init__(self, irc):
         self.__parent = super(IMDb, self)
         self.__parent.__init__(irc)
-        
+
+    # def createRoot(self, imdb_url):
+    #    """opens the given url and creates the lxml.html root element"""
+    #    pagefd = utils.web.getUrlFd(imdb_url,headers=self.http_headers)
+    #    root = html.parse(pagefd)
+    #    return root
     def createRoot(self, url):
         """opens the given url and creates the lxml.html root element"""
-        
-        # get headers from utils and create a referer
-        ref = 'http://%s/%s' % (dynamic.irc.server, dynamic.irc.nick)
+        ref = 'http://%s/%s' % (dynamic.irc.server,
+                                    dynamic.irc.nick)
         headers = dict(utils.web.defaultHeaders)
         headers['Referer'] = ref
-        
-        # open url and create root
         pagefd = utils.web.getUrlFd(url,headers=headers)
         root = html.parse(pagefd)
-        
         return root
 
-    def imdbSearch(self, searchString):
-        """searches the given string on imdb.com"""
-        
-        # create url for imdb.com search
-        searchEncoded = urlencode({'q' : searchString})
+    def imdbSearch(self,searchString):
+        """searches the given stringh on imdb.com"""
+        searchEncoded = utils.web.urlencode({'q' : searchString})
         url = 'https://www.imdb.com/find?&s=tt&' + searchEncoded
-        
         root = self.createRoot(url)
-        
-        # parse root element for movie url
         element = root.findall('//td[@class="result_text"]/a')
         result = 'https://www.imdb.com' + element[0].attrib['href']
-        
-        # remove query string from url
         result = result[:result.find('?ref_')]
-        
         return result
 
     def imdb(self, irc, msg, args, text):
@@ -70,12 +63,9 @@ class IMDb(callbacks.Plugin):
 
         # do a google search for movie on imdb and use first result
         query = 'site:http://www.imdb.com/title/ %s' % text
-        imdb_url = None
-        searx_plugin = irc.getCallback('Searx')
-        if searx_plugin:
-            results = searx_plugin.search(query, msg.args[0])
-            results = json.loads(results.read().decode('utf-8'))
-            results = results['results']
+        searxPlugin = irc.getCallback('Searx')
+        if searxPlugin:
+            results = searxPlugin.getData(searxPlugin.search(query, msg.args[0]))
 
             imdb_url = None
 
@@ -92,7 +82,7 @@ class IMDb(callbacks.Plugin):
             return
 
         root = self.createRoot(imdb_url)
- 
+
         # these 2 closures return functions that are used with rules
         # to turn each xpath element into its final string
         def text(*args):
@@ -111,25 +101,26 @@ class IMDb(callbacks.Plugin):
                 return elem
             return f
 
+
         # Dictionary of rules for page scraping. has each xpath and a function to convert that element into its final string.
         # Each value is a tuple of tuples so that you can provide multiple sets of xpaths/functions for each piece of info.
         # They are tried In order until one works.
         rules = { # 'title': (   ('xpath rule', function), ('backup rule', backup_function), ...   )
-            'title':    (('//head/title', text(' - IMDb', '')),),
-            'name':     (('//h1/span[@itemprop="name"]', text()), ('//h1[@itemprop="name"]', text())),
-            'year':     (('//h1[@itemprop="name"]/span/a', text()),('//a[@title="See more release dates"]', text())),
-            'genres':   (('//div[@itemprop="genre"]',   text2('Genres: ')),),
-            'language': (('//div[h4="Language:"]',      text2('Language: ')),),
-            'stars':    (('//div[h4="Stars:"]',         text2('Stars: ', '| See full cast and crew', '| See full cast & crew', u('\xbb'))),),
-            'plot_keys':(('//span[@itemprop="keywords"]', lambda x: ' | '.join(y.text for y in x)),
-                        ('//div[h4="Plot Keywords:"]', text2(' | See more', 'Plot Keywords: '))),
-            'rating':   (('//div[@class="titlePageSprite star-box-giga-star"]', text()),
-                        ('//span[@itemprop="ratingValue"]', text())),
-            'description': (('//p[@itemprop="description"]', text2()), ('//div[@itemprop="description"]', text2())),
-            'director': (('//div[h4="Director:" or h4="Directors:"]', text2('Director: ', 'Directors: ')),),
-            'creator':  (('//div[h4="Creator:"]/span[@itemprop="creator"]/a/span',  text()),),
-            'runtime':  (('//time[@itemprop="duration"]', text()), ('//div[h4="Runtime:"]/time', text()))
-        }
+                'title':    (('//head/title', text(' - IMDb', '')),),
+                'name':     (('//h1/span[@itemprop="name"]', text()), ('//h1[@itemprop="name"]', text())),
+                'year':     (('//h1[@itemprop="name"]/span/a', text()),('//a[@title="See more release dates"]', text())),
+                'genres':   (('//div[@itemprop="genre"]',   text2('Genres: ')),),
+                'language': (('//div[h4="Language:"]',      text2('Language: ')),),
+                'stars':    (('//div[h4="Stars:"]',         text2('Stars: ', '| See full cast and crew', '| See full cast & crew', u('\xbb'))),),
+                'plot_keys':(('//span[@itemprop="keywords"]', lambda x: ' | '.join(y.text for y in x)),
+                                ('//div[h4="Plot Keywords:"]', text2(' | See more', 'Plot Keywords: '))),
+                'rating':   (('//div[@class="titlePageSprite star-box-giga-star"]', text()),
+                                ('//span[@itemprop="ratingValue"]', text())),
+                'description': (('//p[@itemprop="description"]', text2()), ('//div[@itemprop="description"]', text2())),
+                'director': (('//div[h4="Director:" or h4="Directors:"]', text2('Director: ', 'Directors: ')),),
+                'creator':  (('//div[h4="Creator:"]/span[@itemprop="creator"]/a/span',  text()),),
+                'runtime':  (('//time[@itemprop="duration"]', text()), ('//div[h4="Runtime:"]/time', text()))
+                }
 
         # If IMDb has no rating yet
         info = {'rating': '-'}
@@ -165,6 +156,8 @@ class IMDb(callbacks.Plugin):
 
     imdb = wrap(imdb, ['text'])
 
+
 Class = IMDb
+
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab:
