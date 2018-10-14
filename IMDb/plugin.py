@@ -62,24 +62,37 @@ class IMDb(callbacks.Plugin):
         result = result[:result.find('?ref_')]
         
         return result
+    
+    def imdbPerson(self, persons):
+        """gives a string of persons from imdb api json list or dict"""
+        result = ''
+        try:
+            if isinstance(persons,(list,)):
+                result = ', '.join([x['name'] for x in persons if x['@type'] == 'Person'])
+            else:
+                result = persons['name'] if persons['@type'] == 'Person' else False
+        except:
+            return False
 
+        return result
+    
     def imdb(self, irc, msg, args, text):
         """<movie>
         output info from IMDb about a movie"""
 
         # do a google search for movie on imdb and use first result
         query = 'site:http://www.imdb.com/title/ %s' % text
-        searxPlugin = irc.getCallback('Searx')
-        if searxPlugin:
-            results = searxPlugin.getData(searxPlugin.search(query, msg.args[0]))
-
-            imdb_url = None
+        search_plugin = irc.getCallback('google')
+        
+        if search_plugin:
+            results = search_plugin.decode(search_plugin.search(query, msg.args[0]))
 
             # use first result that ends with a / so that we know its link to main movie page
             for r in results:
                 if r['url'][-1] == '/':
                     imdb_url = r['url']
                     break
+
         else:
             imdb_url = self.imdbSearch(text)
 
@@ -88,8 +101,12 @@ class IMDb(callbacks.Plugin):
             return
 
         root = self.createRoot(imdb_url)
+        
+        # create json object from "imdb api"
+        imdb_jsn = root.xpath('//script[@type="application/ld+json"]')[0].text
+        imdb_jsn = json.loads(imdb_jsn)
 
-        # these 2 closures return functions that are used with rules
+        # return function that are used with rules
         # to turn each xpath element into its final string
         def text(*args):
             def f(elem):
@@ -99,37 +116,23 @@ class IMDb(callbacks.Plugin):
                 return elem
             return f
 
-        def text2(*args):
-            def f(elem):
-                elem = ' '.join(elem[0].text_content().split())
-                for s in args:
-                    elem = elem.replace(s, '')
-                return elem
-            return f
 
         # Dictionary of rules for page scraping. has each xpath and a function to convert that element into its final string.
         # Each value is a tuple of tuples so that you can provide multiple sets of xpaths/functions for each piece of info.
         # They are tried In order until one works.
+        #
+        # Update: Removed most of it here, because the json should be a more reliable source
+        # But title here is much nicer, so is runtime and there is no other way getting metascore ratings
         rules = {
             # 'title': (   ('xpath rule', function), ('backup rule', backup_function), ...   )
-            'title':    (('//head/title', text(' - IMDb', '')),),
-            'name':     (('//h1/span[@itemprop="name"]', text()), ('//h1[@itemprop="name"]', text())),
-            'year':     (('//h1[@itemprop="name"]/span/a', text()),('//a[@title="See more release dates"]', text())),
-            'genres':   (('//div[@itemprop="genre"]',   text2('Genres: ')),),
-            'language': (('//div[h4="Language:"]',      text2('Language: ')),),
-            'stars':    (('//div[h4="Stars:"]',         text2('Stars: ', '| See full cast and crew', '| See full cast & crew', u('\xbb'))),),
-            'plot_keys':(('//span[@itemprop="keywords"]', lambda x: ' | '.join(y.text for y in x)),
-                            ('//div[h4="Plot Keywords:"]', text2(' | See more', 'Plot Keywords: '))),
-            'rating':   (('//div[@class="titlePageSprite star-box-giga-star"]', text()),
-                            ('//span[@itemprop="ratingValue"]', text())),
-            'description': (('//p[@itemprop="description"]', text2()), ('//div[@itemprop="description"]', text2())),
-            'director': (('//div[h4="Director:" or h4="Directors:"]', text2('Director: ', 'Directors: ')),),
-            'creator':  (('//div[h4="Creator:"]/span[@itemprop="creator"]/a/span',  text()),),
-            'runtime':  (('//time[@itemprop="duration"]', text()), ('//div[h4="Runtime:"]/time', text()))
+            'title':    (('//head/title', text(' - IMDb')),),
+            #'language': (('//div[h4="Language:"]',      text2('Language: ')),),
+            'runtime':  (('//time[@itemprop="duration"]', text()), ('//div[h4="Runtime:"]/time', text())),
+            'metascore': (('//div[contains(@class, "metacriticScore")]//span', text()),)
         }
 
         # If IMDb has no rating yet
-        info = {'rating': '-'}
+        info = {'rating': '-', 'metascore': '-'}
 
         # loop over the set of rules
         for title in rules:
@@ -145,7 +148,26 @@ class IMDb(callbacks.Plugin):
                     break
 
         info['url'] = imdb_url
-
+        # getting the data for the info dict from the json
+        if 'name' in imdb_jsn: info['name'] = imdb_jsn['name']
+        if 'type' in imdb_jsn: info['type'] = imdb_jsn['@type']
+        # could be a list or a string
+        if 'genre' in imdb_jsn: info['genres'] = ", ".join(str(x) for x in imdb_jsn['genre']) if isinstance(imdb_jsn['genre'],(list,)) else imdb_jsn['genre']
+        if 'contentRating' in imdb_jsn: info['contentRating'] = imdb_jsn['contentRating']
+        if 'aggregateRating' in imdb_jsn:
+            info['rating'] = imdb_jsn['aggregateRating']['ratingValue']
+            info['ratingCount'] = imdb_jsn['aggregateRating']['ratingCount']            
+        # People lists can be a single dict or a list of dicts, that's what we use the imdbPerson function for
+        if 'actor' in imdb_jsn: info['stars'] = self.imdbPerson(imdb_jsn['actor'])
+        if 'director' in imdb_jsn: info['director'] = self.imdbPerson(imdb_jsn['director'])
+        if 'creator' in imdb_jsn: info['creator'] = self.imdbPerson(imdb_jsn['creator'])          
+        if 'keywords' in imdb_jsn: info['plot_keys'] = imdb_jsn['keywords']
+        # Description also shows the actor in the first sentence, so we try to remove it...
+        if 'description' in imdb_jsn: info['description'] = str(imdb_jsn['description']).split(". ")[1]
+        if 'datePublished' in imdb_jsn: info['year'] = imdb_jsn['datePublished'][0:4]
+        # Not using duration yet, because we would still need to transform ISO_8601 duration to minutes
+        # If 'duration' in imdb_jsn: info['runtime'] = str(imdb_jsn['duration'])
+        
         def reply(s): irc.reply(s, prefixNick=False)
 
         # output based on order in config. lines are separated by ; and fields on a line separated by ,
