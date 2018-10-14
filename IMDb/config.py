@@ -25,14 +25,14 @@ IMDb = conf.registerPlugin('IMDb')
 conf.registerGroup(IMDb, 'formats')
 
 conf.registerChannelValue(IMDb, 'outputorder',
-        registry.String('url;title;description;creator,director,stars;genres,plot_keys;runtime,language', 
+        registry.String('title,url;rating,description;creator,director,stars;genres,plot_keys;runtime,language', 
             'Order that parts will be output. ; is line separator and , is field separator'))
 
 conf.registerChannelValue(IMDb.formats, 'url',
         registry.String('\x02\x031,8IMDb\x03 %(url)s', 'Format for the output of imdb command'))
 
 conf.registerChannelValue(IMDb.formats, 'title',
-        registry.String('\x02\x0304\x1F%(name)s\x1F\x0311\x02 (%(year)s) %(rating)s/10', 'Format for the output of imdb command'))
+        registry.String('\x02\x0304\x1F%(title)s\x1F\x0311\x02', 'Format for the output of imdb command'))
 
 conf.registerChannelValue(IMDb.formats, 'description',
         registry.String('\x0305Description\03 /\x0311 %(description)s', 'Format for the output of imdb command'))
@@ -57,5 +57,8 @@ conf.registerChannelValue(IMDb.formats, 'runtime',
 
 conf.registerChannelValue(IMDb.formats, 'language',
         registry.String('\x0305Language\x03 /\x0311 %(language)s', 'Format for the output of imdb command'))
+
+conf.registerChannelValue(IMDb.formats, 'rating',
+        registry.String('\x0305Content Rating:\x03 /\x0311 %(contentRating)s \x0305IMDb:\x03 /\x0311 %(rating)s/10 (%(ratingCount)s votes) \x0305Metacritic:\x03 /\x0311 %(metascore)s/100', 'Format for the output of imdb command'))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab:
