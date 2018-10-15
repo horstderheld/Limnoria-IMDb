@@ -76,8 +76,8 @@ class IMDb(callbacks.Plugin):
 
         return result
     
-    def imdb(self, irc, msg, args, text):
-        """<movie>
+    def imdb(self, irc, msg, args, opts, text):
+        """[--{short,full}] <movie>
         output info from IMDb about a movie"""
 
         # do a google search for movie on imdb and use first result
@@ -169,6 +169,15 @@ class IMDb(callbacks.Plugin):
         # If 'duration' in imdb_jsn: info['runtime'] = str(imdb_jsn['duration'])
         
         def reply(s): irc.reply(s, prefixNick=False)
+        # getting optional parameter
+        opts = dict(opts)
+        # change orderoutput by optional parameter
+        if 'short' in opts:
+            outputorder = self.registryValue('shortoutputorder', msg.args[0])
+        elif 'full' in opts:
+            outputorder = self.registryValue('fulloutputorder', msg.args[0])
+        else:
+            outputorder = self.registryValue('outputorder', msg.args[0])
 
         # output based on order in config. lines are separated by ; and fields on a line separated by ,
         # each field has a corresponding format config
@@ -182,7 +191,7 @@ class IMDb(callbacks.Plugin):
             if out:
                 reply('  '.join(out))
 
-    imdb = wrap(imdb, ['text'])
+    imdb = wrap(imdb, [getopts({'short':'','full':''}), 'text'])
 
 Class = IMDb
 
