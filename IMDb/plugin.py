@@ -4,7 +4,6 @@
 #
 #
 ###
-
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
@@ -92,7 +91,6 @@ class IMDb(callbacks.Plugin):
                 if r['url'][-1] == '/':
                     imdb_url = r['url']
                     break
-
         else:
             imdb_url = self.imdbSearch(text)
 
@@ -115,7 +113,6 @@ class IMDb(callbacks.Plugin):
                     elem = elem.replace(s, '')
                 return elem
             return f
-
 
         # Dictionary of rules for page scraping. has each xpath and a function to convert that element into its final string.
         # Each value is a tuple of tuples so that you can provide multiple sets of xpaths/functions for each piece of info.
@@ -162,8 +159,15 @@ class IMDb(callbacks.Plugin):
         if 'director' in imdb_jsn: info['director'] = self.imdbPerson(imdb_jsn['director'])
         if 'creator' in imdb_jsn: info['creator'] = self.imdbPerson(imdb_jsn['creator'])          
         if 'keywords' in imdb_jsn: info['plot_keys'] = imdb_jsn['keywords']
-        # Description also shows the actor in the first sentence, so we try to remove it...
-        if 'description' in imdb_jsn: info['description'] = str(imdb_jsn['description']).split(". ")[1]
+        # Description also shows the actor in the first sentence, so we try to remove it. By splitting the Description after de first sentence.
+        if 'description' in imdb_jsn:
+            for i in reversed(imdb_jsn['actor']):
+                try:
+                    info['description'] = str(imdb_jsn['description']).split(str(i['name'] + ". "))[1]
+                    break
+                except:
+                    info['description'] = str(imdb_jsn['description'])
+                    continue
         if 'datePublished' in imdb_jsn: info['year'] = imdb_jsn['datePublished'][0:4]
         # Not using duration yet, because we would still need to transform ISO_8601 duration to minutes
         # If 'duration' in imdb_jsn: info['runtime'] = str(imdb_jsn['duration'])
@@ -181,7 +185,7 @@ class IMDb(callbacks.Plugin):
 
         # output based on order in config. lines are separated by ; and fields on a line separated by ,
         # each field has a corresponding format config
-        for line in self.registryValue('outputorder', msg.args[0]).split(';'):
+        for line in outputorder.split(';'):
             out = []
             for field in line.split(','):
                 try:
