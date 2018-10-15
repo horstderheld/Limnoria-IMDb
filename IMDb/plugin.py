@@ -74,30 +74,8 @@ class IMDb(callbacks.Plugin):
             return False
 
         return result
-    
-    def imdb(self, irc, msg, args, opts, text):
-        """[--{short,full}] <movie>
-        output info from IMDb about a movie"""
-
-        # do a google search for movie on imdb and use first result
-        query = 'site:http://www.imdb.com/title/ %s' % text
-        search_plugin = irc.getCallback('google')
-        
-        if search_plugin:
-            results = search_plugin.decode(search_plugin.search(query, msg.args[0]))
-
-            # use first result that ends with a / so that we know its link to main movie page
-            for r in results:
-                if r['url'][-1] == '/':
-                    imdb_url = r['url']
-                    break
-        else:
-            imdb_url = self.imdbSearch(text)
-
-        if imdb_url is None:
-            irc.error('\x0304Couldnt find a title')
-            return
-
+    def imdbParse(self, url):
+        """ parses given imdb site and creates a dict with usefull informations """
         root = self.createRoot(imdb_url)
         
         # create json object from "imdb api"
@@ -171,6 +149,33 @@ class IMDb(callbacks.Plugin):
         if 'datePublished' in imdb_jsn: info['year'] = imdb_jsn['datePublished'][0:4]
         # Not using duration yet, because we would still need to transform ISO_8601 duration to minutes
         # If 'duration' in imdb_jsn: info['runtime'] = str(imdb_jsn['duration'])
+
+        return info
+    
+    def imdb(self, irc, msg, args, opts, text):
+        """[--{short,full}] <movie>
+        output info from IMDb about a movie"""
+
+        # do a google search for movie on imdb and use first result
+        query = 'site:http://www.imdb.com/title/ %s' % text
+        search_plugin = irc.getCallback('google')
+        
+        if search_plugin:
+            results = search_plugin.decode(search_plugin.search(query, msg.args[0]))
+
+            # use first result that ends with a / so that we know its link to main movie page
+            for r in results:
+                if r['url'][-1] == '/':
+                    imdb_url = r['url']
+                    break
+        else:
+            imdb_url = self.imdbSearch(text)
+
+        if imdb_url is None:
+            irc.error('\x0304Couldnt find a title')
+            return
+        
+        info = self.imdbParse(imdb_url)
         
         def reply(s): irc.reply(s, prefixNick=False)
         # getting optional parameter
