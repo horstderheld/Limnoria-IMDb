@@ -24,8 +24,16 @@ IMDb = conf.registerPlugin('IMDb')
 
 conf.registerGroup(IMDb, 'formats')
 
+conf.registerChannelValue(IMDb, 'shortoutputorder',
+        registry.String('title,runtime,rating,url',
+            'Order that parts will be output. ; is line separator and , is field separator'))
+
 conf.registerChannelValue(IMDb, 'outputorder',
-        registry.String('title,url;rating,description;creator,director,stars;genres,plot_keys;runtime,language', 
+        registry.String('title,runtime,rating,url;description,genres,plot_keys',
+            'Order that parts will be output. ; is line separator and , is field separator'))
+
+conf.registerChannelValue(IMDb, 'fulloutputorder',
+        registry.String('title,url;runtime,rating;description;director,creator,stars;genres,plot_keys',
             'Order that parts will be output. ; is line separator and , is field separator'))
 
 conf.registerChannelValue(IMDb.formats, 'url',
