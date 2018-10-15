@@ -74,6 +74,7 @@ class IMDb(callbacks.Plugin):
             return False
 
         return result
+    
     def imdbParse(self, url):
         """ parses given imdb site and creates a dict with usefull informations """
         root = self.createRoot(imdb_url)
@@ -81,7 +82,12 @@ class IMDb(callbacks.Plugin):
         # create json object from "imdb api"
         imdb_jsn = root.xpath('//script[@type="application/ld+json"]')[0].text
         imdb_jsn = json.loads(imdb_jsn)
-
+        
+        # we can call that from outsite so we"ve to check it's actually a movie or series page
+        # maybe that should be an extra function, to make sure we got an imdb url...
+        if imdb_jsn['@type'] != 'TVSeries' and imdb_jsn['@type'] != 'Movie':
+            return false
+        
         # return function that are used with rules
         # to turn each xpath element into its final string
         def text(*args):
