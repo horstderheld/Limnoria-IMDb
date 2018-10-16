@@ -83,10 +83,18 @@ class IMDb(callbacks.Plugin):
         imdb_jsn = root.xpath('//script[@type="application/ld+json"]')[0].text
         imdb_jsn = json.loads(imdb_jsn)
         
-        # we can call that from outsite so we"ve to check it's actually a movie or series page
+        # we can call that from outsite now, so we've to check it's actually a apge we can get usefull informatiosn from 
         # maybe that should be an extra function, to make sure we got an imdb url...
-        if imdb_jsn['@type'] != 'TVSeries' and imdb_jsn['@type'] != 'Movie':
+        allowedTypes = [
+            'TVSeries',   
+            'TVEpisode',
+            'Movie',
+            'VideoGame'
+        ]
+
+        if imdb_jsn['@type'] not in allowedTypes:
             return false
+
         
         # return function that are used with rules
         # to turn each xpath element into its final string
