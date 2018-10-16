@@ -185,9 +185,12 @@ class IMDb(callbacks.Plugin):
         else:
             imdb_url = self.imdbSearch(text)
 
-        if imdb_url is None:
-            irc.error('\x0304Couldnt find a title')
+        try:
+            imdb_url
+        except NameError:
+            irc.error('Couldn\'t find ' + ircutils.bold(text))
             return
+
         
         info = self.imdbParse(imdb_url)
         
