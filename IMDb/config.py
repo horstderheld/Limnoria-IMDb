@@ -34,7 +34,7 @@ conf.registerChannelValue(IMDb, 'outputorder',
             'Order that parts will be output. ; is line separator and , is field separator'))
 
 conf.registerChannelValue(IMDb, 'fulloutputorder',
-        registry.String('title,url;runtime,rating;description;director,creator,stars;genres,keywords',
+        registry.String('title,url;runtime,rating;description;director,creator,actor;genres,keywords',
             'Order that parts will be output. ; is line separator and , is field separator'))
 
 conf.registerChannelValue(IMDb.formats, 'url',
@@ -58,7 +58,7 @@ conf.registerChannelValue(IMDb.formats, 'actor',
 conf.registerChannelValue(IMDb.formats, 'genres',
         registry.String(ircutils.bold('Genres:') + ' %(genres)s', 'Format for the output of imdb command'))
 
-conf.registerChannelValue(IMDb.formats, 'keywords3',
+conf.registerChannelValue(IMDb.formats, 'keywords',
         registry.String(ircutils.bold('Keywords:') + ' %(keywords)s', 'Format for the output of imdb command'))
 
 conf.registerChannelValue(IMDb.formats, 'runtime',
