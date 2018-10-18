@@ -141,7 +141,7 @@ class IMDb(callbacks.Plugin):
         for key in ['name', '@type', 'contentRating', 'keywords', 'datePublished']:
             if key in imdb_jsn: info[key] = imdb_jsn[key]
         # People lists can be a single dict or a list of dicts, that's what we use the imdbPerson function for
-        for key in ['stars', 'directo', 'creator']:
+        for key in ['actor', 'director', 'creator']:
             if key in imdb_jsn: info[key] = self.imdbPerson(imdb_jsn[key])
         # could be a list or a string
         if 'genre' in imdb_jsn: info['genres'] = ", ".join(str(x) for x in imdb_jsn['genre']) if isinstance(imdb_jsn['genre'],(list,)) else imdb_jsn['genre']
