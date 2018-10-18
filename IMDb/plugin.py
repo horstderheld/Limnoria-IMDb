@@ -137,19 +137,17 @@ class IMDb(callbacks.Plugin):
 
         info['url'] = url
         # getting the data for the info dict from the json
-        if 'name' in imdb_jsn: info['name'] = imdb_jsn['name']
-        if 'type' in imdb_jsn: info['type'] = imdb_jsn['@type']
+        # Not using duration yet, because we would still need to transform ISO_8601 duration to minutes
+        for key in ['name', '@type', 'contentRating', 'keywords', 'datePublished']:
+            if key in imdb_jsn: info[key] = imdb_jsn[key]
+        # People lists can be a single dict or a list of dicts, that's what we use the imdbPerson function for
+        for key in ['stars', 'directo', 'creator']:
+            if key in imdb_jsn: info[key] = self.imdbPerson(imdb_jsn[key])
         # could be a list or a string
         if 'genre' in imdb_jsn: info['genres'] = ", ".join(str(x) for x in imdb_jsn['genre']) if isinstance(imdb_jsn['genre'],(list,)) else imdb_jsn['genre']
-        if 'contentRating' in imdb_jsn: info['contentRating'] = imdb_jsn['contentRating']
         if 'aggregateRating' in imdb_jsn:
             info['rating'] = imdb_jsn['aggregateRating']['ratingValue']
             info['ratingCount'] = imdb_jsn['aggregateRating']['ratingCount']
-        # People lists can be a single dict or a list of dicts, that's what we use the imdbPerson function for
-        if 'actor' in imdb_jsn: info['stars'] = self.imdbPerson(imdb_jsn['actor'])
-        if 'director' in imdb_jsn: info['director'] = self.imdbPerson(imdb_jsn['director'])
-        if 'creator' in imdb_jsn: info['creator'] = self.imdbPerson(imdb_jsn['creator'])
-        if 'keywords' in imdb_jsn: info['plot_keys'] = imdb_jsn['keywords']
         # Description also shows the actor in the first sentence, so we try to remove it. By splitting the Description after de first sentence.
         if 'description' in imdb_jsn:
             for i in reversed(imdb_jsn['actor']):
@@ -159,10 +157,7 @@ class IMDb(callbacks.Plugin):
                 except:
                     info['description'] = str(imdb_jsn['description'])
                     continue
-        if 'datePublished' in imdb_jsn: info['year'] = imdb_jsn['datePublished'][0:4]
-        # Not using duration yet, because we would still need to transform ISO_8601 duration to minutes
-        # If 'duration' in imdb_jsn: info['runtime'] = str(imdb_jsn['duration'])
-
+        if 'datePublished' in info: info['year'] = info['datePublished'][0:4]
         return info
 
     def imdb(self, irc, msg, args, opts, text):

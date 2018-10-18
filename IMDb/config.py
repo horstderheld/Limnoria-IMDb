@@ -29,11 +29,11 @@ conf.registerChannelValue(IMDb, 'shortoutputorder',
             'Order that parts will be output. ; is line separator and , is field separator'))
 
 conf.registerChannelValue(IMDb, 'outputorder',
-        registry.String('title,runtime,rating,url;description,genres,plot_keys',
+        registry.String('title,runtime,rating,url;description,genres,keywords',
             'Order that parts will be output. ; is line separator and , is field separator'))
 
 conf.registerChannelValue(IMDb, 'fulloutputorder',
-        registry.String('title,url;runtime,rating;description;director,creator,stars;genres,plot_keys',
+        registry.String('title,url;runtime,rating;description;director,creator,stars;genres,keywords',
             'Order that parts will be output. ; is line separator and , is field separator'))
 
 conf.registerChannelValue(IMDb.formats, 'url',
@@ -57,8 +57,8 @@ conf.registerChannelValue(IMDb.formats, 'stars',
 conf.registerChannelValue(IMDb.formats, 'genres',
         registry.String('\x0305Genres\03 /\x0311 %(genres)s', 'Format for the output of imdb command'))
 
-conf.registerChannelValue(IMDb.formats, 'plot_keys',
-        registry.String('\x0305Plot Keywords\03 /\x0311 %(plot_keys)s', 'Format for the output of imdb command'))
+conf.registerChannelValue(IMDb.formats, 'keywords',
+        registry.String('\x0305Plot Keywords\03 /\x0311 %(keywords)s', 'Format for the output of imdb command'))
 
 conf.registerChannelValue(IMDb.formats, 'runtime',
         registry.String('\x0305Runtime\x03 /\x0311 %(runtime)s', 'Format for the output of imdb command'))
