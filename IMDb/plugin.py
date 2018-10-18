@@ -37,6 +37,7 @@ class IMDb(callbacks.Plugin):
         # get headers from utils and create a referer
         ref = 'http://%s/%s' % (dynamic.irc.server, dynamic.irc.nick)
         headers = dict(utils.web.defaultHeaders)
+        headers['Accept-Language'] = 'en-US; q=1.0, en; q=0.5'
         headers['Referer'] = ref
 
         # open url and create root
