@@ -26,14 +26,14 @@ class IMDb(callbacks.Plugin):
     """Add the help for "@plugin help IMDb" here
     This should describe *how* to use this plugin."""
     threaded = True
-    
+
     def __init__(self, irc):
         self.__parent = super(IMDb, self)
         self.__parent.__init__(irc)
 
     def createRoot(self, url):
         """opens the given url and creates the lxml.html root element"""
-       
+
         # get headers from utils and create a referer
         ref = 'http://%s/%s' % (dynamic.irc.server, dynamic.irc.nick)
         headers = dict(utils.web.defaultHeaders)
@@ -46,22 +46,22 @@ class IMDb(callbacks.Plugin):
 
     def imdbSearch(self,searchString):
         """searches the given stringh on imdb.com"""
-        
+
         # create url for imdb.com search
         searchEncoded = utils.web.urlencode({'q' : searchString})
         url = 'https://www.imdb.com/find?&s=tt&' + searchEncoded
-        
+
         root = self.createRoot(url)
-        
+
         # parse root element for movie url
         element = root.findall('//td[@class="result_text"]/a')
         result = 'https://www.imdb.com' + element[0].attrib['href']
-       
+
         # remove query string from url
         result = result[:result.find('?ref_')]
-        
+
         return result
-    
+
     def imdbPerson(self, persons):
         """gives a string of persons from imdb api json list or dict"""
         result = ''
@@ -74,19 +74,19 @@ class IMDb(callbacks.Plugin):
             return False
 
         return result
-    
+
     def imdbParse(self, url):
         """ parses given imdb site and creates a dict with usefull informations """
-        root = self.createRoot(imdb_url)
-        
+        root = self.createRoot(url)
+
         # create json object from "imdb api"
         imdb_jsn = root.xpath('//script[@type="application/ld+json"]')[0].text
         imdb_jsn = json.loads(imdb_jsn)
-        
-        # we can call that from outsite now, so we've to check it's actually a apge we can get usefull informatiosn from 
+
+        # we can call that from outsite now, so we've to check it's actually a apge we can get usefull informatiosn from
         # maybe that should be an extra function, to make sure we got an imdb url...
         allowedTypes = [
-            'TVSeries',   
+            'TVSeries',
             'TVEpisode',
             'Movie',
             'VideoGame'
@@ -95,7 +95,6 @@ class IMDb(callbacks.Plugin):
         if imdb_jsn['@type'] not in allowedTypes:
             return false
 
-        
         # return function that are used with rules
         # to turn each xpath element into its final string
         def text(*args):
@@ -136,7 +135,7 @@ class IMDb(callbacks.Plugin):
                         pass
                     break
 
-        info['url'] = imdb_url
+        info['url'] = url
         # getting the data for the info dict from the json
         if 'name' in imdb_jsn: info['name'] = imdb_jsn['name']
         if 'type' in imdb_jsn: info['type'] = imdb_jsn['@type']
@@ -145,11 +144,11 @@ class IMDb(callbacks.Plugin):
         if 'contentRating' in imdb_jsn: info['contentRating'] = imdb_jsn['contentRating']
         if 'aggregateRating' in imdb_jsn:
             info['rating'] = imdb_jsn['aggregateRating']['ratingValue']
-            info['ratingCount'] = imdb_jsn['aggregateRating']['ratingCount']            
+            info['ratingCount'] = imdb_jsn['aggregateRating']['ratingCount']
         # People lists can be a single dict or a list of dicts, that's what we use the imdbPerson function for
         if 'actor' in imdb_jsn: info['stars'] = self.imdbPerson(imdb_jsn['actor'])
         if 'director' in imdb_jsn: info['director'] = self.imdbPerson(imdb_jsn['director'])
-        if 'creator' in imdb_jsn: info['creator'] = self.imdbPerson(imdb_jsn['creator'])          
+        if 'creator' in imdb_jsn: info['creator'] = self.imdbPerson(imdb_jsn['creator'])
         if 'keywords' in imdb_jsn: info['plot_keys'] = imdb_jsn['keywords']
         # Description also shows the actor in the first sentence, so we try to remove it. By splitting the Description after de first sentence.
         if 'description' in imdb_jsn:
@@ -165,7 +164,7 @@ class IMDb(callbacks.Plugin):
         # If 'duration' in imdb_jsn: info['runtime'] = str(imdb_jsn['duration'])
 
         return info
-    
+
     def imdb(self, irc, msg, args, opts, text):
         """[--{short,full}] <movie>
         output info from IMDb about a movie"""
@@ -173,7 +172,7 @@ class IMDb(callbacks.Plugin):
         # do a google search for movie on imdb and use first result
         query = 'site:http://www.imdb.com/title/ %s' % text
         search_plugin = irc.getCallback('google')
-        
+
         if search_plugin:
             results = search_plugin.decode(search_plugin.search(query, msg.args[0]))
 
@@ -191,9 +190,8 @@ class IMDb(callbacks.Plugin):
             irc.error('Couldn\'t find ' + ircutils.bold(text))
             return
 
-        
         info = self.imdbParse(imdb_url)
-        
+
         def reply(s): irc.reply(s, prefixNick=False)
         # getting optional parameter
         opts = dict(opts)
