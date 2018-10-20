@@ -79,7 +79,7 @@ class IMDb(callbacks.Plugin):
     def imdbParse(self, url):
         """ parses given imdb site and creates a dict with usefull informations """
         root = self.createRoot(url)
-
+        info = {}
         # create json object from "imdb api"
         imdb_jsn = root.xpath('//script[@type="application/ld+json"]')[0].text
         imdb_jsn = json.loads(imdb_jsn)
@@ -119,9 +119,6 @@ class IMDb(callbacks.Plugin):
             'runtime':  (('//time[@itemprop="duration"]', text()), ('//div[h4="Runtime:"]/time', text())),
             'metascore': (('//div[contains(@class, "metacriticScore")]//span', text()),)
         }
-
-        # If IMDb has no rating yet
-        info = {'rating': '-', 'metascore': '-'}
 
         # loop over the set of rules
         for title in rules:
@@ -209,7 +206,7 @@ class IMDb(callbacks.Plugin):
                 except KeyError:
                     continue
             if out:
-                reply('  '.join(out))
+                reply(' '.join(out))
 
     imdb = wrap(imdb, [getopts({'short':'','full':''}), 'text'])
 

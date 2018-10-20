@@ -26,15 +26,15 @@ IMDb = conf.registerPlugin('IMDb')
 conf.registerGroup(IMDb, 'formats')
 
 conf.registerChannelValue(IMDb, 'shortoutputorder',
-        registry.String('title,runtime,rating,url',
+        registry.String('title,runtime,contentrating,rating,ratingcount,metascore,url',
             'Order that parts will be output. ; is line separator and , is field separator'))
 
 conf.registerChannelValue(IMDb, 'outputorder',
-        registry.String('title,runtime,rating,url;description,genres,keywords',
+        registry.String('title,runtime,contentrating,rating,ratingcount,metascore,url;description,genres,keywords',
             'Order that parts will be output. ; is line separator and , is field separator'))
 
 conf.registerChannelValue(IMDb, 'fulloutputorder',
-        registry.String('title,url;runtime,rating;description;director,creator,actor;genres,keywords',
+        registry.String('title,url;runtime,contentrating,rating,ratingcount,metascore;description;director,creator,actor;genres,keywords',
             'Order that parts will be output. ; is line separator and , is field separator'))
 
 conf.registerChannelValue(IMDb.formats, 'url',
@@ -67,7 +67,16 @@ conf.registerChannelValue(IMDb.formats, 'runtime',
 conf.registerChannelValue(IMDb.formats, 'language',
         registry.String(ircutils.bold('Language:') + ' %(language)s', 'Format for the output of imdb command'))
 
+conf.registerChannelValue(IMDb.formats, 'contentrating',
+        registry.String(ircutils.bold('Content Rating:') + ' %(contentRating)s', 'Format for the output of imdb command'))
+
 conf.registerChannelValue(IMDb.formats, 'rating',
-        registry.String(ircutils.bold('Content Rating:') + ' %(contentRating)s ' + ircutils.bold('IMDb:') + ' %(rating)s/10 (%(ratingCount)s votes) ' + ircutils.bold('Metacritic:') + ' %(metascore)s/100', 'Format for the output of imdb command'))
+        registry.String(ircutils.bold('IMDb:') + ' %(rating)s/10', 'Format for the output of imdb command'))
+
+conf.registerChannelValue(IMDb.formats, 'ratingcount',
+        registry.String('(%(ratingCount)s votes)', 'Format for the output of imdb command'))
+
+conf.registerChannelValue(IMDb.formats, 'metascore',
+        registry.String(ircutils.bold('Metacritic:') + ' %(metascore)s/100', 'Format for the output of imdb command'))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab:
