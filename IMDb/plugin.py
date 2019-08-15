@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2012, Dan
+# Copyright (c) 2018, lod
 # All rights reserved.
 #
 #
