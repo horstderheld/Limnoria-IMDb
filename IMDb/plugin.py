@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2018, lod
+# Copyright (c) 2020, lod
 # All rights reserved.
 #
 #
@@ -13,6 +13,7 @@ import supybot.callbacks as callbacks
 import sys
 import json
 import unicodedata
+import datetime
 from lxml import html
 
 if sys.version_info[0] >= 3:
@@ -76,6 +77,20 @@ class IMDb(callbacks.Plugin):
 
         return result
 
+    def isoTOhuman(self, duration):
+        ### converts IMDb iso_8601 duration to a readable string ###
+        result = ''
+        for x in duration:
+                 try:
+                     int(x)
+                     result = result + x
+                 except:pass
+                 if x == 'H':
+                     result = result + 'hrs '
+                 if x == 'M':
+                     result = result + 'min'
+        return result
+
     def imdbParse(self, url):
         """ parses given imdb site and creates a dict with usefull informations """
         root = self.createRoot(url)
@@ -136,7 +151,7 @@ class IMDb(callbacks.Plugin):
         info['url'] = url
         # getting the data for the info dict from the json
         # Not using duration yet, because we would still need to transform ISO_8601 duration to minutes
-        for key in ['name', '@type', 'contentRating', 'keywords', 'datePublished']:
+        for key in ['name', '@type', 'contentRating', 'keywords', 'datePublished', 'duration']:
             if key in imdb_jsn: info[key] = imdb_jsn[key]
         # People lists can be a single dict or a list of dicts, that's what we use the imdbPerson function for
         for key in ['actor', 'director', 'creator']:
@@ -156,6 +171,7 @@ class IMDb(callbacks.Plugin):
                     info['description'] = str(imdb_jsn['description'])
                     continue
         if 'datePublished' in info: info['year'] = info['datePublished'][0:4]
+        if 'duration' in info: info['runtime'] = self.isoTOhuman(info['duration'])
         return info
 
     def imdb(self, irc, msg, args, opts, text):
@@ -167,13 +183,14 @@ class IMDb(callbacks.Plugin):
         search_plugin = irc.getCallback('google')
 
         if search_plugin:
-            results = search_plugin.decode(search_plugin.search(query, msg.args[0]))
-
+            results = search_plugin.decode(search_plugin.search(query, msg.channel, irc.network))
+            imdb_url = results[0].link
             # use first result that ends with a / so that we know its link to main movie page
-            for r in results:
-                if r['url'][-1] == '/':
-                    imdb_url = r['url']
-                    break
+            #for r in results:
+
+            #    if r['link'][-1] == '/':
+            #        imdb_url = r['url']
+            #        break
         else:
             imdb_url = self.imdbSearch(text)
 
