@@ -126,12 +126,9 @@ class IMDb(callbacks.Plugin):
         # They are tried In order until one works.
         #
         # Update: Removed most of it here, because the json should be a more reliable source
-        # But title here is much nicer, so is runtime and there is no other way getting metascore ratings
+        # But title here is much nicer and there is no other way getting metascore ratings
         rules = {
-            # 'title': (   ('xpath rule', function), ('backup rule', backup_function), ...   )
             'title':    (('//head/title', text(' - IMDb')),),
-            #'language': (('//div[h4="Language:"]',      text2('Language: ')),),
-            'runtime':  (('//time[@itemprop="duration"]', text()), ('//div[h4="Runtime:"]/time', text())),
             'metascore': (('//div[contains(@class, "metacriticScore")]//span', text()),)
         }
 
@@ -150,7 +147,6 @@ class IMDb(callbacks.Plugin):
 
         info['url'] = url
         # getting the data for the info dict from the json
-        # Not using duration yet, because we would still need to transform ISO_8601 duration to minutes
         for key in ['name', '@type', 'contentRating', 'keywords', 'datePublished', 'duration']:
             if key in imdb_jsn: info[key] = imdb_jsn[key]
         # People lists can be a single dict or a list of dicts, that's what we use the imdbPerson function for
@@ -184,13 +180,11 @@ class IMDb(callbacks.Plugin):
 
         if search_plugin:
             results = search_plugin.decode(search_plugin.search(query, msg.channel, irc.network))
-            imdb_url = results[0].link
             # use first result that ends with a / so that we know its link to main movie page
-            #for r in results:
-
-            #    if r['link'][-1] == '/':
-            #        imdb_url = r['url']
-            #        break
+            for r in results:
+                if r.link[-1] == '/':
+                    imdb_url = r.link
+                    break
         else:
             imdb_url = self.imdbSearch(text)
 
